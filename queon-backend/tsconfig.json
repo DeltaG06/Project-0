@@ -1,0 +1,33 @@
+{
+  "compilerOptions": {
+    // === Runtime target ===
+    "target": "ES2020",
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "ignoreDeprecations": "6.0",
+    // === Paths ===
+    "rootDir": "./src",
+    "outDir": "./dist",
+
+    // === Node types ===
+    "types": ["node"],
+
+    // === Interop so `import express from "express"` works ===
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+
+    // === Build outputs ===
+    "sourceMap": true,
+    "declaration": true,
+    "declarationMap": true,
+
+    // === Strictness ===
+    "strict": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+
+    // === Misc ===
+    "skipLibCheck": true
+  },
+  "include": ["src"]
+}
