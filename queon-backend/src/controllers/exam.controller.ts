@@ -213,3 +213,21 @@ export async function getExitQrHandler(req: Request, res: Response) {
     return res.status(500).json({ message: "Internal server error" });
   }
 }
+
+// POST /api/exams/incident
+export async function reportIncidentHandler(req: Request, res: Response) {
+  try {
+    const { examId, type, details, timestamp } = req.body;
+
+    console.warn(`🚨 INCIDENT REPORTED [${type}] for Exam ${examId}`);
+    console.warn(`Details: ${details}`);
+    console.warn(`Time: ${new Date(timestamp).toLocaleString()}`);
+
+    // TODO: Save to database (needs Incident model)
+
+    return res.status(200).json({ status: "recorded" });
+  } catch (err) {
+    console.error("Error reporting incident:", err);
+    return res.status(500).json({ message: "Internal server error" });
+  }
+}

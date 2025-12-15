@@ -6,6 +6,7 @@ import {
   validateExitHandler,
   getEntryQrHandler,
   getExitQrHandler,
+  reportIncidentHandler
 } from "../controllers/exam.controller";
 
 const router = Router();
@@ -20,6 +21,9 @@ router.post("/exams/validate-entry", validateEntryHandler);
 
 // Validate exit (when student scans EXIT QR)
 router.post("/exams/validate-exit", validateExitHandler);
+
+// Report Incident (Cheating detection)
+router.post("/exams/incident", reportIncidentHandler);
 
 // Get QR for entry / exit
 router.get("/exams/:id/qr/entry", getEntryQrHandler);

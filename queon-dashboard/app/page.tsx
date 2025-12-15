@@ -3,172 +3,99 @@
 import { useState } from "react";
 import { createExam, getEntryQr, getExitQr } from "../src/lib/api";
 
-type ExamResponse = {
-  id: string;
-  examName: string;
-  room?: string | null;
-  durationMinutes: number;
-  entryToken: string;
-  exitToken: string;
-  isActive: boolean;
-};
-
-type QrResponse = {
-  examId: string;
-  type: string;
-  qrDataUrl: string;
-  rawPayload: {
-    examId: string;
-    type: string;
-    token: string;
-  };
-};
-
 export default function Home() {
   const [examName, setExamName] = useState("");
+  const [duration, setDuration] = useState(0);
   const [room, setRoom] = useState("");
-  const [durationMinutes, setDurationMinutes] = useState(180);
-
+  const [examId, setExamId] = useState<string | null>(null);
+  const [entryQr, setEntryQr] = useState<string | null>(null);
+  const [exitQr, setExitQr] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [exam, setExam] = useState<ExamResponse | null>(null);
-  const [entryQr, setEntryQr] = useState<QrResponse | null>(null);
-  const [exitQr, setExitQr] = useState<QrResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
 
-  async function handleCreateExam(e: React.FormEvent) {
-    e.preventDefault();
+  async function handleCreateExam() {
     setLoading(true);
-    setError(null);
-    setExam(null);
-    setEntryQr(null);
-    setExitQr(null);
-
     try {
-      const created = await createExam({
+      const exam = await createExam({
         examName,
-        room: room || undefined,
-        durationMinutes,
+        room,
+        durationMinutes: duration,
       });
 
-      setExam(created);
+      setExamId(exam.id);
 
-      const entry = await getEntryQr(created.id);
-      const exit = await getExitQr(created.id);
+      const entry = await getEntryQr(exam.id);
+      const exit = await getExitQr(exam.id);
 
-      setEntryQr(entry);
-      setExitQr(exit);
-    } catch (err: any) {
-      console.error(err);
-      setError(err.message || "Something went wrong");
+      setEntryQr(entry.qrDataUrl);
+      setExitQr(exit.qrDataUrl);
+    } catch (error) {
+      console.error(error);
+      alert("❌ Failed to create exam");
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main className="min-h-screen bg-slate-950 text-slate-100 flex flex-col items-center py-10 px-4">
-      <div className="w-full max-w-3xl bg-slate-900 rounded-2xl p-6 shadow-xl border border-slate-800">
-        <h1 className="text-2xl font-bold mb-4 text-slate-50">
-          Queon Invigilator Dashboard
-        </h1>
-        <p className="text-slate-400 mb-6 text-sm">
-          Create an exam session to generate ENTRY and EXIT QR codes for students.
-        </p>
+    <main style={{ padding: "2rem", maxWidth: "500px", margin: "auto" }}>
+      <h1 style={{ fontSize: "2rem", fontWeight: "bold", marginBottom: "1rem" }}>
+        QUEON Admin Dashboard
+      </h1>
 
-        <form onSubmit={handleCreateExam} className="space-y-4 mb-6">
-          <div>
-            <label className="block text-sm mb-1">Exam Name</label>
-            <input
-              className="w-full rounded-lg bg-slate-800 border border-slate-700 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500"
-              value={examName}
-              onChange={(e) => setExamName(e.target.value)}
-              placeholder="Physics Midterm"
-              required
-            />
-          </div>
+      <label>Exam Name</label>
+      <input
+        style={{ width: "100%", marginBottom: "1rem" }}
+        value={examName}
+        onChange={(e) => setExamName(e.target.value)}
+        placeholder="Physics Midterm"
+      />
 
-          <div>
-            <label className="block text-sm mb-1">Room (optional)</label>
-            <input
-              className="w-full rounded-lg bg-slate-800 border border-slate-700 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500"
-              value={room}
-              onChange={(e) => setRoom(e.target.value)}
-              placeholder="101"
-            />
-          </div>
+      <label>Room (optional)</label>
+      <input
+        style={{ width: "100%", marginBottom: "1rem" }}
+        value={room}
+        onChange={(e) => setRoom(e.target.value)}
+      />
 
-          <div>
-            <label className="block text-sm mb-1">Duration (minutes)</label>
-            <input
-              type="number"
-              min={1}
-              className="w-full rounded-lg bg-slate-800 border border-slate-700 px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-500"
-              value={durationMinutes}
-              onChange={(e) => setDurationMinutes(Number(e.target.value))}
-              required
-            />
-          </div>
+      <label>Duration (minutes)</label>
+      <input
+        type="number"
+        style={{ width: "100%", marginBottom: "1rem" }}
+        value={duration === 0 ? "" : duration}
+        onChange={(e) =>
+          setDuration(e.target.value === "" ? 0 : Number(e.target.value))
+        }
+      />
 
-          <button
-            type="submit"
-            disabled={loading}
-            className="mt-2 inline-flex items-center justify-center rounded-lg bg-sky-500 hover:bg-sky-600 disabled:bg-sky-800 px-4 py-2 text-sm font-semibold"
-          >
-            {loading ? "Creating..." : "Create Exam & Generate QRs"}
-          </button>
-        </form>
+      <button
+        onClick={handleCreateExam}
+        disabled={loading}
+        style={{
+          width: "100%",
+          padding: "1rem",
+          background: "#111",
+          color: "white",
+          cursor: "pointer",
+          opacity: loading ? 0.5 : 1,
+        }}
+      >
+        {loading ? "Creating..." : "Create Exam"}
+      </button>
 
-        {error && (
-          <div className="mb-4 text-sm text-red-400 bg-red-950/40 border border-red-800 rounded-lg px-3 py-2">
-            {error}
-          </div>
-        )}
+      {examId && (
+        <>
+          <hr style={{ margin: "2rem 0" }} />
 
-        {exam && (
-          <div className="mb-6 border border-slate-700 rounded-xl p-4 bg-slate-900/70">
-            <h2 className="text-lg font-semibold mb-2">Exam Created</h2>
-            <p className="text-sm text-slate-300">
-              <span className="font-medium">Name:</span> {exam.examName}
-            </p>
-            <p className="text-sm text-slate-300">
-              <span className="font-medium">Room:</span> {exam.room || "N/A"}
-            </p>
-            <p className="text-sm text-slate-300">
-              <span className="font-medium">Duration:</span> {exam.durationMinutes} minutes
-            </p>
-            <p className="text-xs text-slate-500 mt-2 break-all">
-              <span className="font-medium">Exam ID:</span> {exam.id}
-            </p>
-          </div>
-        )}
+          <h2>Exam Created ✔️</h2>
+          <p><strong>ID:</strong> {examId}</p>
 
-        {entryQr && exitQr && (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="border border-slate-700 rounded-xl p-4 bg-slate-900/70 flex flex-col items-center">
-              <h3 className="font-semibold mb-2 text-sm">ENTRY QR</h3>
-              <img
-                src={entryQr.qrDataUrl}
-                alt="Entry QR"
-                className="w-40 h-40 bg-white rounded-md"
-              />
-              <p className="mt-2 text-xs text-slate-400 text-center">
-                Students scan this to enter <br /> exam mode.
-              </p>
-            </div>
-            <div className="border border-slate-700 rounded-xl p-4 bg-slate-900/70 flex flex-col items-center">
-              <h3 className="font-semibold mb-2 text-sm">EXIT QR</h3>
-              <img
-                src={exitQr.qrDataUrl}
-                alt="Exit QR"
-                className="w-40 h-40 bg-white rounded-md"
-              />
-              <p className="mt-2 text-xs text-slate-400 text-center">
-                Student scans this at submission <br /> to exit exam mode.
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
+          <h3>Entry QR</h3>
+          <img src={entryQr!} alt="Entry QR" style={{ width: 200 }} />
+
+          <h3 style={{ marginTop: "1rem" }}>Exit QR</h3>
+          <img src={exitQr!} alt="Exit QR" style={{ width: 200 }} />
+        </>
+      )}
     </main>
   );
 }
